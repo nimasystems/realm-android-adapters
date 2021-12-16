@@ -41,23 +41,18 @@ public abstract class RealmBaseAdapter<T extends RealmModel> extends BaseAdapter
             throw new IllegalStateException("Only use this adapter with managed list, " +
                     "for un-managed lists you can just use the BaseAdapter");
         this.adapterData = data;
-        this.listener = new RealmChangeListener<OrderedRealmCollection<T>>() {
-            @Override
-            public void onChange(OrderedRealmCollection<T> results) {
-                notifyDataSetChanged();
-            }
-        };
+        this.listener = results -> notifyDataSetChanged();
 
         if (isDataValid()) {
-            //noinspection ConstantConditions
             addListener(data);
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private void addListener(@NonNull OrderedRealmCollection<T> data) {
         if (data instanceof RealmResults) {
             RealmResults<T> results = (RealmResults<T>) data;
-            //noinspection unchecked
+            // noinspection unchecked
             results.addChangeListener((RealmChangeListener) listener);
         } else if (data instanceof RealmList) {
             RealmList<T> list = (RealmList<T>) data;
@@ -68,6 +63,7 @@ public abstract class RealmBaseAdapter<T extends RealmModel> extends BaseAdapter
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private void removeListener(@NonNull OrderedRealmCollection<T> data) {
         if (data instanceof RealmResults) {
             RealmResults<T> results = (RealmResults<T>) data;
@@ -97,7 +93,7 @@ public abstract class RealmBaseAdapter<T extends RealmModel> extends BaseAdapter
      * Get the data item associated with the specified position in the data set.
      *
      * @param position Position of the item whose data we want within the adapter's
-     * data set.
+     *                 data set.
      * @return The data at the specified position.
      */
     @Override
@@ -123,10 +119,10 @@ public abstract class RealmBaseAdapter<T extends RealmModel> extends BaseAdapter
 
     /**
      * Updates the data associated with the Adapter.
-     *
+     * <p>
      * Note that RealmResults and RealmLists are "live" views, so they will automatically be updated to reflect the
      * latest changes. This will also trigger {@code notifyDataSetChanged()} to be called on the adapter.
-     *
+     * <p>
      * This method is therefore only useful if you want to display data based on a new query without replacing the
      * adapter.
      *

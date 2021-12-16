@@ -9,11 +9,11 @@ try {
     ws('/tmp/realm-android-adapters') {
       stage('SCM') {
         checkout([
-          $class: 'GitSCM',
-          branches: scm.branches,
-          gitTool: 'native git',
-          extensions: scm.extensions + [[$class: 'CleanCheckout']],
-          userRemoteConfigs: scm.userRemoteConfigs
+                $class: 'GitSCM',
+                branches: scm.branches,
+                gitTool: 'native git',
+                extensions: scm.extensions + [[$class: 'CleanCheckout']],
+                userRemoteConfigs: scm.userRemoteConfigs
         ])
       }
 
@@ -25,7 +25,7 @@ try {
       buildEnv.inside("-e HOME=/tmp -e _JAVA_OPTIONS=-Duser.home=/tmp --privileged -v /dev/bus/usb:/dev/bus/usb -v ${env.HOME}/gradle-cache:/tmp/.gradle -v ${env.HOME}/.android:/tmp/.android -v ${env.HOME}/ccache:/tmp/.ccache") {
         stage('Build & Test') {
           try {
-            gradle 'assemble javadoc check connectedCheck'
+            gradle 'assemble javadoc check spotbugMain pmd checkstyle connectedCheck'
             if (env.BRANCH_NAME == 'master') {
               stage('Collect metrics') {
                 collectAarMetrics()
@@ -60,9 +60,9 @@ def stopLogCatCollector(String backgroundPid, boolean archiveLog) {
   sh "kill ${backgroundPid}"
   if (archiveLog) {
     zip([
-      'zipFile': 'logcat.zip',
-      'archive': true,
-      'glob' : 'logcat.txt'
+            'zipFile': 'logcat.zip',
+            'archive': true,
+            'glob' : 'logcat.txt'
     ])
   }
   sh 'rm logcat.txt '
@@ -82,8 +82,8 @@ def getTagsString(Map<String, String> tags) {
 
 def storeJunitResults(String path) {
   step([
-    $class: 'JUnitResultArchiver',
-    testResults: path
+          $class: 'JUnitResultArchiver',
+          testResults: path
   ])
 }
 

@@ -16,6 +16,8 @@
 
 package io.realm;
 
+import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
@@ -42,38 +44,38 @@ public abstract class RealmRecyclerViewAdapter<T extends RealmModel, S extends R
 
     private final boolean hasAutoUpdates;
     private final boolean updateOnModification;
+    @SuppressWarnings("rawtypes")
     private final OrderedRealmCollectionChangeListener listener;
     @Nullable
     private OrderedRealmCollection<T> adapterData;
 
+    @SuppressLint("NotifyDataSetChanged")
+    @SuppressWarnings("rawtypes")
     private OrderedRealmCollectionChangeListener createListener() {
-        return new OrderedRealmCollectionChangeListener() {
-            @Override
-            public void onChange(Object collection, OrderedCollectionChangeSet changeSet) {
-                if (changeSet.getState() == OrderedCollectionChangeSet.State.INITIAL) {
-                    notifyDataSetChanged();
-                    return;
-                }
-                // For deletions, the adapter has to be notified in reverse order.
-                OrderedCollectionChangeSet.Range[] deletions = changeSet.getDeletionRanges();
-                for (int i = deletions.length - 1; i >= 0; i--) {
-                    OrderedCollectionChangeSet.Range range = deletions[i];
-                    notifyItemRangeRemoved(range.startIndex + dataOffset(), range.length);
-                }
+        return (collection, changeSet) -> {
+            if (changeSet.getState() == OrderedCollectionChangeSet.State.INITIAL) {
+                notifyDataSetChanged();
+                return;
+            }
+            // For deletions, the adapter has to be notified in reverse order.
+            OrderedCollectionChangeSet.Range[] deletions = changeSet.getDeletionRanges();
+            for (int i = deletions.length - 1; i >= 0; i--) {
+                OrderedCollectionChangeSet.Range range = deletions[i];
+                notifyItemRangeRemoved(range.startIndex + dataOffset(), range.length);
+            }
 
-                OrderedCollectionChangeSet.Range[] insertions = changeSet.getInsertionRanges();
-                for (OrderedCollectionChangeSet.Range range : insertions) {
-                    notifyItemRangeInserted(range.startIndex + dataOffset(), range.length);
-                }
+            OrderedCollectionChangeSet.Range[] insertions = changeSet.getInsertionRanges();
+            for (OrderedCollectionChangeSet.Range range : insertions) {
+                notifyItemRangeInserted(range.startIndex + dataOffset(), range.length);
+            }
 
-                if (!updateOnModification) {
-                    return;
-                }
+            if (!updateOnModification) {
+                return;
+            }
 
-                OrderedCollectionChangeSet.Range[] modifications = changeSet.getChangeRanges();
-                for (OrderedCollectionChangeSet.Range range : modifications) {
-                    notifyItemRangeChanged(range.startIndex + dataOffset(), range.length);
-                }
+            OrderedCollectionChangeSet.Range[] modifications = changeSet.getChangeRanges();
+            for (OrderedCollectionChangeSet.Range range : modifications) {
+                notifyItemRangeChanged(range.startIndex + dataOffset(), range.length);
             }
         };
     }
@@ -93,7 +95,7 @@ public abstract class RealmRecyclerViewAdapter<T extends RealmModel, S extends R
     /**
      * This is equivalent to {@code RealmRecyclerViewAdapter(data, autoUpdate, true)}.
      *
-     * @param data collection data to be used by this adapter.
+     * @param data       collection data to be used by this adapter.
      * @param autoUpdate when it is {@code false}, the adapter won't be automatically updated when collection data
      *                   changes.
      * @see #RealmRecyclerViewAdapter(OrderedRealmCollection, boolean, boolean)
@@ -103,9 +105,9 @@ public abstract class RealmRecyclerViewAdapter<T extends RealmModel, S extends R
     }
 
     /**
-     * @param data collection data to be used by this adapter.
-     * @param autoUpdate when it is {@code false}, the adapter won't be automatically updated when collection data
-     *                   changes.
+     * @param data                 collection data to be used by this adapter.
+     * @param autoUpdate           when it is {@code false}, the adapter won't be automatically updated when collection data
+     *                             changes.
      * @param updateOnModification when it is {@code true}, this adapter will be updated when deletions, insertions or
      *                             modifications happen to the collection data. When it is {@code false}, only
      *                             deletions and insertions will trigger the updates. This param will be ignored if
@@ -148,11 +150,11 @@ public abstract class RealmRecyclerViewAdapter<T extends RealmModel, S extends R
 
     /**
      * Returns the item in the underlying data associated with the specified position.
-     *
+     * <p>
      * This method will return {@code null} if the Realm instance has been closed or the index
      * is outside the range of valid adapter data (which e.g. can happen if {@link #getItemCount()}
      * is modified to account for header or footer views.
-     *
+     * <p>
      * Also, this method does not take into account any header views. If these are present, modify
      * the {@code index} parameter accordingly first.
      *
@@ -169,8 +171,7 @@ public abstract class RealmRecyclerViewAdapter<T extends RealmModel, S extends R
 
         // To avoid exception, return null if there are some extra positions that the
         // child adapter is adding in getItemCount (e.g: to display footer view in recycler view)
-        if(adapterData != null && index >= adapterData.size()) return null;
-        //noinspection ConstantConditions
+        if (adapterData != null && index >= adapterData.size()) return null;
         return isDataValid() ? adapterData.get(index) : null;
     }
 
@@ -190,6 +191,7 @@ public abstract class RealmRecyclerViewAdapter<T extends RealmModel, S extends R
      *
      * @param data the new {@link OrderedRealmCollection} to display.
      */
+    @SuppressLint("NotifyDataSetChanged")
     @SuppressWarnings("WeakerAccess")
     public void updateData(@Nullable OrderedRealmCollection<T> data) {
         if (hasAutoUpdates) {

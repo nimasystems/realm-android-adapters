@@ -2,30 +2,35 @@ apply plugin: 'ch.netzwerg.release'
 
 buildscript {
     ext {
-        sdkVersion = 28
-        buildTools = '28.0.3'
-        realmVersion = '5.8.0'
-        androidXVersion = '1.0.0'
+        sdkVersion = 31
+        buildTools = '31.0.0'
+        realmVersion = '10.8.1'
+        androidXVersion = '1.2.1'
     }
 
     repositories {
         google()
-        jcenter()
+        mavenCentral()
         maven {
-            url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
+            url "https://plugins.gradle.org/m2/"
+        }
+        maven {
+            url 'https://oss.jfrog.org/artifactory/oss-snapshot-local'
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.1'                    // Android Build tools
-        classpath 'ch.netzwerg:gradle-release-plugin:1.2.0'                 // Manage Release tags / versioning
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'    // Allows you to install AAR's locally
-        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.5.4'   // OJO integration
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'    // Bintray integration
-        classpath "io.realm:realm-gradle-plugin:${realmVersion}"            // Realm base library
+        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath 'ch.netzwerg:gradle-release-plugin:1.2.0'
+        classpath 'gradle.plugin.com.github.spotbugs.snom:spotbugs-gradle-plugin:4.7.1'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath "io.realm:realm-gradle-plugin:${realmVersion}"
+        classpath 'io.github.gradle-nexus:publish-plugin:1.1.0'
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:3.1.0"
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+'
     }
 }
 
-static String getAppId (path) {
+static String getAppId(path) {
     String build = new File(path).text
     def matcher = build =~ 'applicationId.*'
     def appId = matcher.size() > 0 ? matcher[0].trim() - 'applicationId' - ~/\s/ : ''
@@ -44,9 +49,9 @@ allprojects {
     version = file("${rootDir}/version.txt").text.trim();
     repositories {
         google()
-        jcenter()
+        mavenCentral()
         maven {
-            url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
+            url 'https://oss.jfrog.org/artifactory/oss-snapshot-local'
         }
     }
 
@@ -73,6 +78,8 @@ allprojects {
 
 }
 
+apply from: "${rootDir}/mavencentral-publish.gradle"
+
 // Configure ch.netzwerg.release plugin
 // See https://github.com/netzwerg/gradle-release-plugin
 task build {}
@@ -81,8 +88,3 @@ release {
     versionSuffix = '-SNAPSHOT'
     tagPrefix = 'v'
 }
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '3.5'
-}
-
